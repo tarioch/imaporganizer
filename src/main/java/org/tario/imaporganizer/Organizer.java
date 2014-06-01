@@ -8,39 +8,30 @@ import javax.mail.Session;
 import javax.mail.Store;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.tario.imaporganizer.conf.Configuration;
 
 @Component
 public class Organizer {
-	final String server;
-	final String user;
-	final String password;
-	final boolean ssl;
-	final String port;
+
+	private final Configuration conf;
 
 	@Autowired
-	public Organizer(@Value("${conf.server}") String server, @Value("${conf.user}") String user,
-			@Value("${conf.password}") String password, @Value("${conf.ssl}") boolean ssl,
-			@Value("${conf.port}") String port) {
-		this.server = server;
-		this.user = user;
-		this.password = password;
-		this.ssl = ssl;
-		this.port = port;
+	public Organizer(Configuration conf) {
+		this.conf = conf;
 	}
 
 	public void run() throws Exception {
 
-		final String protocol = ssl ? "imaps" : "imap";
+		final String protocol = conf.isSsl() ? "imaps" : "imap";
 		final Properties props = new Properties();
 		props.setProperty("mail.store.protocol", protocol);
-		props.setProperty("mail." + protocol + ".host", server);
-		props.setProperty("mail." + protocol + ".port", port);
+		props.setProperty("mail." + protocol + ".host", conf.getServer());
+		props.setProperty("mail." + protocol + ".port", conf.getPort());
 
 		final Session session = Session.getDefaultInstance(props);
 		final Store store = session.getStore(protocol);
-		store.connect(server, user, password);
+		store.connect(conf.getServer(), conf.getUser(), conf.getPassword());
 		System.out.println(store.isConnected());
 
 		final Folder folder = store.getFolder("INBOX");
