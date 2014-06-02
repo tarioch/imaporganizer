@@ -13,14 +13,16 @@ public class Configuration {
 	final String password;
 	final boolean ssl;
 	final String port;
+	final String from;
 
 	@Autowired
 	public Configuration(Environment env) {
-		server = env.getProperty("conf.server");
-		user = env.getProperty("conf.user");
-		password = env.getProperty("conf.password");
-		ssl = env.getProperty("conf.ssl", Boolean.class, Boolean.FALSE).booleanValue();
-		port = env.getProperty("conf.port", ssl ? "993" : "143");
+		server = env.getProperty("source.server");
+		user = env.getProperty("source.user");
+		password = env.getProperty("source.password");
+		ssl = env.getProperty("source.ssl", Boolean.class, Boolean.FALSE).booleanValue();
+		port = env.getProperty("source.port", ssl ? "993" : "143");
+		from = env.getProperty("source.from");
 	}
 
 	public String getServer() {
@@ -41,6 +43,10 @@ public class Configuration {
 
 	public String getPort() {
 		return port;
+	}
+
+	public String getFrom() {
+		return from;
 	}
 
 }

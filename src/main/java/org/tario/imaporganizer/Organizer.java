@@ -1,47 +1,33 @@
 package org.tario.imaporganizer;
 
-import java.util.Properties;
+import java.util.Collection;
 
-import javax.mail.Folder;
 import javax.mail.Message;
-import javax.mail.Session;
-import javax.mail.Store;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.tario.imaporganizer.conf.Configuration;
+import org.tario.imaporganizer.destination.SmtpDestination;
+import org.tario.imaporganizer.source.ImapSource;
 
 @Component
 public class Organizer {
 
-	private final Configuration conf;
+	private final ImapSource source;
+	private final SmtpDestination destination;
 
 	@Autowired
-	public Organizer(Configuration conf) {
-		this.conf = conf;
+	public Organizer(ImapSource source, SmtpDestination destination) {
+		this.source = source;
+		this.destination = destination;
 	}
 
 	public void run() throws Exception {
-
-		final String protocol = conf.isSsl() ? "imaps" : "imap";
-		final Properties props = new Properties();
-		props.setProperty("mail.store.protocol", protocol);
-		props.setProperty("mail." + protocol + ".host", conf.getServer());
-		props.setProperty("mail." + protocol + ".port", conf.getPort());
-
-		final Session session = Session.getDefaultInstance(props);
-		final Store store = session.getStore(protocol);
-		store.connect(conf.getServer(), conf.getUser(), conf.getPassword());
-		System.out.println(store.isConnected());
-
-		final Folder folder = store.getFolder("INBOX");
-		folder.open(Folder.READ_ONLY);
-		final Message[] messages = folder.getMessages();
+		source.connect();
+		final Collection<Message> messages = source.fetch();
 		for (final Message message : messages) {
 			System.out.println(message.getSubject());
 		}
-
-		store.close();
+		source.disconnect();
 	}
 
 }
