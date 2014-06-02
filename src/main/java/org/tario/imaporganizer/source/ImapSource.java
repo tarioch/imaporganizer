@@ -1,6 +1,7 @@
 package org.tario.imaporganizer.source;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Properties;
 
 import javax.mail.Folder;
@@ -9,6 +10,7 @@ import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
 import javax.mail.search.FromTerm;
 import javax.mail.search.SearchTerm;
 
@@ -30,7 +32,12 @@ public class ImapSource {
 
 	public void connect() {
 		try {
-			store = connectToStore();
+			final Properties props = new Properties();
+			props.setProperty("mail.store.protocol", conf.isSsl() ? "imaps" : "imap");
+
+			final Session session = Session.getInstance(props);
+			store = session.getStore();
+			store.connect(conf.getServer(), conf.getUser(), conf.getPassword());
 		} catch (final MessagingException e) {
 			throw new IllegalStateException(e);
 		}
@@ -46,35 +53,25 @@ public class ImapSource {
 
 	public Collection<Message> fetch() {
 		try {
-			final Folder folder = getFolder(store);
+			final Folder folder = store.getFolder("INBOX");
+			folder.open(Folder.READ_ONLY);
+
 			final SearchTerm searchTerm = new FromTerm(new InternetAddress(conf.getFrom()));
 			final Message[] messages = folder.search(searchTerm);
-			final Collection<Message> result = Lists.newArrayList(messages);
+
+			final List<Message> result = Lists.newArrayList();
+			for (final Message message : messages) {
+				if (message instanceof MimeMessage) {
+					result.add(new MimeMessage((MimeMessage) message));
+				} else {
+					throw new UnsupportedOperationException("Can not handle message type "
+							+ message.getClass().getName());
+				}
+			}
 
 			return result;
 		} catch (final MessagingException e) {
 			throw new IllegalStateException(e);
 		}
-	}
-
-	private Folder getFolder(final Store store) throws MessagingException {
-		Folder folder;
-		folder = store.getFolder("INBOX");
-		folder.open(Folder.READ_ONLY);
-		return folder;
-	}
-
-	private Store connectToStore() throws MessagingException {
-		final String protocol = conf.isSsl() ? "imaps" : "imap";
-		final Properties props = new Properties();
-		props.setProperty("mail.store.protocol", protocol);
-		props.setProperty("mail." + protocol + ".host", conf.getServer());
-		props.setProperty("mail." + protocol + ".port", conf.getPort());
-
-		final Session session = Session.getDefaultInstance(props);
-		Store store;
-		store = session.getStore(protocol);
-		store.connect(conf.getServer(), conf.getUser(), conf.getPassword());
-		return store;
 	}
 }

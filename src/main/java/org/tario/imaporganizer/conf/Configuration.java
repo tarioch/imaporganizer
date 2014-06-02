@@ -14,6 +14,7 @@ public class Configuration {
 	final boolean ssl;
 	final String port;
 	final String from;
+	final String to;
 
 	@Autowired
 	public Configuration(Environment env) {
@@ -23,6 +24,7 @@ public class Configuration {
 		ssl = env.getProperty("source.ssl", Boolean.class, Boolean.FALSE).booleanValue();
 		port = env.getProperty("source.port", ssl ? "993" : "143");
 		from = env.getProperty("source.from");
+		to = env.getProperty("destination.to");
 	}
 
 	public String getServer() {
@@ -47,6 +49,10 @@ public class Configuration {
 
 	public String getFrom() {
 		return from;
+	}
+
+	public String getTo() {
+		return to;
 	}
 
 }

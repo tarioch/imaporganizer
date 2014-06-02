@@ -23,10 +23,14 @@ public class Organizer {
 
 	public void run() throws Exception {
 		source.connect();
+		destination.connect();
 		final Collection<Message> messages = source.fetch();
 		for (final Message message : messages) {
 			System.out.println(message.getSubject());
+			message.setSubject("Dummy Test");
+			destination.send(message);
 		}
+		destination.disconnect();
 		source.disconnect();
 	}
 
