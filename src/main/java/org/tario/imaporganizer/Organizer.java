@@ -1,37 +1,52 @@
 package org.tario.imaporganizer;
 
 import java.util.Collection;
+import java.util.List;
 
 import javax.mail.Message;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
-import org.tario.imaporganizer.destination.SmtpDestination;
-import org.tario.imaporganizer.source.ImapSource;
+import org.tario.imaporganizer.conf.Configuration;
+import org.tario.imaporganizer.destination.Destination;
+import org.tario.imaporganizer.source.Source;
 
 @Component
 public class Organizer {
 
-	private final ImapSource source;
-	private final SmtpDestination destination;
+	private final Configuration conf;
+	private final ApplicationContext appContext;
 
 	@Autowired
-	public Organizer(ImapSource source, SmtpDestination destination) {
-		this.source = source;
-		this.destination = destination;
+	public Organizer(Configuration conf, ApplicationContext appContext) {
+		this.conf = conf;
+		this.appContext = appContext;
 	}
 
 	public void run() throws Exception {
-		source.connect();
-		destination.connect();
-		final Collection<Message> messages = source.fetch();
-		for (final Message message : messages) {
-			System.out.println(message.getSubject());
-			message.setSubject("Dummy Test");
-			destination.send(message);
-		}
-		destination.disconnect();
-		source.disconnect();
-	}
+		final List<String> rules = conf.getRules();
+		for (final String rule : rules) {
+			final String sourceSection = conf.getSource(rule);
+			final String sourceType = conf.getType(sourceSection);
+			final Source source = (Source) appContext.getBean(Class.forName(sourceType));
+			source.connect(sourceSection);
 
+			final String destinationSection = conf.getDestination(rule);
+			final String destinationType = conf.getType(destinationSection);
+			final Destination destination = (Destination) appContext.getBean(Class.forName(destinationType));
+			destination.connect(destinationSection);
+
+			final Collection<Message> messages = source.fetch(rule + ".source");
+			for (final Message message : messages) {
+				System.out.println(message.getSubject());
+				message.setSubject("Dummy Test");
+				destination.send(message, rule + ".destination");
+			}
+
+			destination.disconnect();
+			source.disconnect();
+		}
+
+	}
 }

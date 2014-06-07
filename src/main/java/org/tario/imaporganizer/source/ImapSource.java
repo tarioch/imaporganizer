@@ -17,11 +17,13 @@ import javax.mail.search.SearchTerm;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.tario.imaporganizer.conf.Configuration;
+import org.tario.imaporganizer.conf.ImapSourceConfig;
+import org.tario.imaporganizer.conf.ImapSourceOperationConfig;
 
 import com.google.common.collect.Lists;
 
 @Component
-public class ImapSource {
+public class ImapSource implements Source {
 	private final Configuration conf;
 	private Store store;
 
@@ -30,19 +32,23 @@ public class ImapSource {
 		this.conf = conf;
 	}
 
-	public void connect() {
+	@Override
+	public void connect(String section) {
 		try {
+			final ImapSourceConfig imapConfig = conf.getImapSourceConfig(section);
+
 			final Properties props = new Properties();
-			props.setProperty("mail.store.protocol", conf.isSsl() ? "imaps" : "imap");
+			props.setProperty("mail.store.protocol", imapConfig.isSsl() ? "imaps" : "imap");
 
 			final Session session = Session.getInstance(props);
 			store = session.getStore();
-			store.connect(conf.getServer(), conf.getUser(), conf.getPassword());
+			store.connect(imapConfig.getServer(), imapConfig.getUser(), imapConfig.getPassword());
 		} catch (final MessagingException e) {
 			throw new IllegalStateException(e);
 		}
 	}
 
+	@Override
 	public void disconnect() {
 		try {
 			store.close();
@@ -51,12 +57,15 @@ public class ImapSource {
 		}
 	}
 
-	public Collection<Message> fetch() {
+	@Override
+	public Collection<Message> fetch(String section) {
 		try {
+			final ImapSourceOperationConfig opConfig = conf.getImapSourceOperationConfig(section);
+
 			final Folder folder = store.getFolder("INBOX");
 			folder.open(Folder.READ_ONLY);
 
-			final SearchTerm searchTerm = new FromTerm(new InternetAddress(conf.getFrom()));
+			final SearchTerm searchTerm = new FromTerm(new InternetAddress(opConfig.getFrom()));
 			final Message[] messages = folder.search(searchTerm);
 
 			final List<Message> result = Lists.newArrayList();

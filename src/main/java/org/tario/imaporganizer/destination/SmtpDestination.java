@@ -10,11 +10,15 @@ import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.tario.imaporganizer.conf.Configuration;
+import org.tario.imaporganizer.conf.SmtpDestinationConfig;
+import org.tario.imaporganizer.conf.SmtpDestinationOperationConfig;
 
+@Qualifier("Smtp")
 @Component
-public class SmtpDestination {
+public class SmtpDestination implements Destination {
 
 	private final Configuration conf;
 	private Transport transport;
@@ -24,19 +28,23 @@ public class SmtpDestination {
 		this.conf = conf;
 	}
 
-	public void connect() {
+	@Override
+	public void connect(String section) {
 		try {
+			final SmtpDestinationConfig smtpConfig = conf.getSmtpDestinationConfig(section);
+
 			final Properties props = new Properties();
-			props.setProperty("mail.transport.protocol", conf.isSsl() ? "smtps" : "smtp");
+			props.setProperty("mail.transport.protocol", smtpConfig.isSsl() ? "smtps" : "smtp");
 
 			final Session session = Session.getInstance(props);
 			transport = session.getTransport();
-			transport.connect(conf.getServer(), conf.getUser(), conf.getPassword());
+			transport.connect(smtpConfig.getServer(), smtpConfig.getUser(), smtpConfig.getPassword());
 		} catch (final MessagingException e) {
 			throw new IllegalStateException(e);
 		}
 	}
 
+	@Override
 	public void disconnect() {
 		try {
 			transport.close();
@@ -45,9 +53,11 @@ public class SmtpDestination {
 		}
 	}
 
-	public void send(Message message) {
+	@Override
+	public void send(Message message, String section) {
+		final SmtpDestinationOperationConfig opConfig = conf.getSmtpDestinationOperationConfig(section);
 		try {
-			transport.sendMessage(message, new Address[] { new InternetAddress(conf.getTo()) });
+			transport.sendMessage(message, new Address[] { new InternetAddress(opConfig.getTo()) });
 		} catch (final MessagingException e) {
 			throw new IllegalStateException(e);
 		}
