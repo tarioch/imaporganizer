@@ -37,11 +37,9 @@ public class Organizer {
 			final Destination destination = (Destination) appContext.getBean(Class.forName(destinationType));
 			destination.connect(destinationSection);
 
-			final Collection<Message> messages = source.fetch(rule + ".source");
+			final Collection<Message> messages = source.fetch(rule);
 			for (final Message message : messages) {
-				System.out.println(message.getSubject());
-				message.setSubject("Dummy Test");
-				destination.send(message, rule + ".destination");
+				destination.send(message, rule);
 			}
 
 			destination.disconnect();

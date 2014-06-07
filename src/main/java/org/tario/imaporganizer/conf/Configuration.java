@@ -45,7 +45,7 @@ public class Configuration {
 	}
 
 	public ImapSourceOperationConfig getImapSourceOperationConfig(String section) {
-		final String from = env.getProperty(section + ".from");
+		final String from = env.getProperty(section + ".source.from");
 
 		return new ImapSourceOperationConfig(from);
 	}
@@ -60,7 +60,7 @@ public class Configuration {
 	}
 
 	public SmtpDestinationOperationConfig getSmtpDestinationOperationConfig(String section) {
-		final String to = env.getProperty(section + ".to");
+		final String to = env.getProperty(section + ".destination.to");
 
 		return new SmtpDestinationOperationConfig(to);
 	}

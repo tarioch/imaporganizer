@@ -10,23 +10,25 @@ import org.springframework.stereotype.Component;
 @Component
 public class DummyDestination implements Destination {
 
+	private String section;
+
 	@Override
 	public void connect(String section) {
+		this.section = section;
 		System.out.println("Connect " + section);
 	}
 
 	@Override
 	public void disconnect() {
-		System.out.println("Disconnect");
+		System.out.println("Disconnect " + section);
 	}
 
 	@Override
-	public void send(Message message, String section) {
+	public void send(Message message, String rule) {
 		try {
-			System.out.println("Send " + section + ": " + message.getSubject());
+			System.out.println("Send " + section + " " + rule + ": " + message.getSubject());
 		} catch (final MessagingException e) {
 			throw new IllegalStateException(e);
 		}
 	}
-
 }
