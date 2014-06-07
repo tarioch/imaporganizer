@@ -15,6 +15,7 @@ import javax.mail.search.FromTerm;
 import javax.mail.search.SearchTerm;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.tario.imaporganizer.conf.Configuration;
 import org.tario.imaporganizer.conf.ImapSourceConfig;
@@ -23,6 +24,7 @@ import org.tario.imaporganizer.conf.ImapSourceOperationConfig;
 import com.google.common.collect.Lists;
 
 @Component
+@Scope("prototype")
 public class ImapSource implements Source {
 	private final Configuration conf;
 	private Store store;

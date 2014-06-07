@@ -10,14 +10,14 @@ import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.tario.imaporganizer.conf.Configuration;
 import org.tario.imaporganizer.conf.SmtpDestinationConfig;
 import org.tario.imaporganizer.conf.SmtpDestinationOperationConfig;
 
-@Qualifier("Smtp")
 @Component
+@Scope("prototype")
 public class SmtpDestination implements Destination {
 
 	private final Configuration conf;

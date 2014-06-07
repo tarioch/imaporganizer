@@ -3,11 +3,11 @@ package org.tario.imaporganizer.destination;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-@Qualifier("Dummy")
 @Component
+@Scope("prototype")
 public class DummyDestination implements Destination {
 
 	private String section;
